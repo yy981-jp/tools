@@ -26,6 +26,7 @@ public:
 				++count;
 				if (stopSignal) break;
 			}
+			delete this;
 		}).detach();
 	}
 	void stop() {stopSignal=true;}
