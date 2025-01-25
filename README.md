@@ -1,3 +1,5 @@
+!!!!! 情報が古くなっています 現在、ホームページに説明書を作っている途中です !!!!!
+
 # [日本語版] [→English Version](README_en.md)
 ## andor/ bool is_or(std::string, std::string...)
 第一引数と第二引数以降のどれかが一致していればtrueを返し、すべて一致しない場合はfalseを返す
