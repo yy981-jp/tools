@@ -25,3 +25,13 @@ public:
 private:
 	std::chrono::time_point<std::chrono::high_resolution_clock> start;
 };
+/*
+struct getInfo {
+	getInfo(int flags) {
+	enum LocationFlags {
+		FileName = 0b0001,
+		FunctionName = 0b0010,
+		Line = 0b0100,
+		Column = 0b1000
+	};
+}*/
