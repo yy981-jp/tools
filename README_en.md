@@ -1,3 +1,5 @@
+!!!!! Information is out of date We are currently in the process of creating instructions on my website !!!!!
+
 # [English Version] [→日本語版](README.md)
 ## andor/ bool is_or(std::string, std::string...)
 Returns true if the first argument and any of the arguments after the second match, or false if they do not match.
