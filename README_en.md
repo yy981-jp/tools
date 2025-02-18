@@ -1,5 +1,7 @@
 !!!!! Information is out of date We are currently in the process of creating instructions on my website !!!!!
 
+It's incomplete, but the information at this link is newer https://yy981.web.fc2.com/cpp-h/index.html
+
 # [English Version] [→日本語版](README.md)
 ## andor/ bool is_or(std::string, std::string...)
 Returns true if the first argument and any of the arguments after the second match, or false if they do not match.
