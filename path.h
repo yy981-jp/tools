@@ -11,7 +11,3 @@ std::string normalize_path(std::string str) {
 	}
 	return str;
 }
-
-std::string normalize_path(const char* str) {
-	return normalize_path(std::string(str));
-}

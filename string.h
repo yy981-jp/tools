@@ -1,16 +1,23 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <sstream>
+#include <unordered_map>
 
 
 namespace st {
+
+template <typename... Args> bool isor(const std::string& value, Args... args) {
+    std::vector<std::string> values = {args...};
+    return std::find(values.begin(), values.end(), value) != values.end();
+}
 
 void replace(std::string& str, const std::string from, const std::string to) {
 	if (from.empty()) return; // 空文字列を弾く
 	size_t start_pos = 0;
 	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-		str.replace(start_pos, from.length(), to);
-		start_pos += to.length(); // 重複置換を防ぐため位置を進める
+		str.replace(start_pos, from.size(), to);
+		start_pos += to.size();
 	}
 }
 
@@ -38,6 +45,14 @@ int toi(const std::string& str) {
 	return filtered.empty() ? 0 : std::stoi(filtered);
 }
 
+std::vector<int> toi(const std::vector<std::string>& input) {
+	std::vector<int> result;
+	for (std::string e: input) {
+		result.emplace_back(st::toi(e));
+	}
+	return result;
+}
+
 // split to string
 std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
 	std::vector<std::string> tokens;
@@ -45,7 +60,7 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
 
 	while ((end = str.find(delimiter, start)) != std::string::npos) {
 		tokens.emplace_back(str.substr(start, end - start));
-		start = end + delimiter.length();
+		start = end + delimiter.size();
 	}
 	// 最後の部分を追加
 	tokens.emplace_back(str.substr(start));
@@ -54,20 +69,89 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
 
 // split to int
 std::vector<int> spliti(const std::string& str, const std::string& delimiter) {
-	std::vector<int> tokens;
-	size_t start = 0, end;
-
-	while ((end = str.find(delimiter, start)) != std::string::npos) {
-		tokens.emplace_back(st::toi(str.substr(start, end - start)));
-		start = end + delimiter.length();
+	std::vector<std::string> output = split(str,delimiter);
+	std::vector<int> result;
+	for (std::string e: output) {
+		result.emplace_back(st::toi(e));
 	}
-	// 最後の部分を追加
-	tokens.emplace_back(st::toi(str.substr(start)));
-	return tokens;
+	return result;
 }
 
-bool chcmp(const char* cs1, const char* cs2) {
-	return (std::string(cs1) == std::string(cs2));
+
+typedef std::unordered_map<std::string,std::vector<std::string>> splits;
+typedef std::unordered_map<std::string,std::vector<int>> splitsi;
+	
+splits split(const std::string& input, const std::vector<std::string>& targets) {
+	splits result;
+	std::string current = input;
+	std::string current_segment;
+	std::string current_delimiter;
+
+	// Helper function to find the first target in the string
+	auto find_next_target = [&](const std::string& str, size_t start_pos) {
+		size_t min_pos = std::string::npos;
+		std::string found_target;
+		for (const auto& target : targets) {
+			size_t pos = str.find(target, start_pos);
+			if (pos != std::string::npos && (min_pos == std::string::npos || pos < min_pos)) {
+				min_pos = pos;
+				found_target = target;
+			}
+		}
+		return std::make_pair(min_pos, found_target);
+	};
+
+	size_t pos = 0;
+	while (pos < current.size()) {
+		auto [next_pos, delimiter] = find_next_target(current, pos);
+		if (next_pos == std::string::npos) break;
+			// Capture segment and corresponding delimiter
+		current_segment = current.substr(pos, next_pos - pos + delimiter.size());
+		current_delimiter = delimiter;
+
+		// Store in result map
+		result[current_delimiter].push_back(current_segment);
+
+		// Move position past the current delimiter
+		pos = next_pos + delimiter.size();
+	}
+
+	return result;
+}
+
+splitsi spliti(const std::string& input, const std::vector<std::string>& targets) {
+	splitsi result;
+	splits output = split(input,targets);
+	for (const auto& [key, segments] : output) {
+		for (const auto& segment : segments) {
+			result[key].push_back(st::toi(segment));
+		}
+	}
+	return result;
+}
+
+
+// char配列 to string配列
+std::vector<std::string> argc(const int i_argc, const char* const i_argv[]) {
+	std::vector<std::string> result;
+	for (int i = 0; i < i_argc; ++i) {
+		result.emplace_back(i_argv[i]);
+	}
+	return result;
+}
+
+// char配列 to int配列
+std::vector<int> argci(const int i_argc, const char* i_argv[]) {
+	std::vector<int> result;
+	for (int i = 0; i < i_argc; ++i) {
+		result.emplace_back(toi(i_argv[i]));
+	}
+	return result;
+}
+
+// char比較
+bool chcmp(const std::string& cs1, const std::string& cs2) {
+	return (cs1 == cs2);
 }
 
 }

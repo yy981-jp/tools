@@ -8,9 +8,9 @@
 	#include <cstdint>
 	#include <stdexcept>
 	// 関数テンプレートオブジェクト
-	template<typename R, typename... Args> class DLL {
+	template<typename R, typename... Args>
+	class DLL {
 	public:
-		DLL(HMODULE hModule, const char* functionName): func(nullptr), hModule(hModule), functionName(functionName) {}
 		DLL(HMODULE hModule, std::string functionName): func(nullptr), hModule(hModule) {functionName = functionName.c_str();}
 
 		R operator()(Args... args) {

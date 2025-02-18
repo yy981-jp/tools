@@ -1,19 +1,42 @@
-#warning y9INC: This code has not been tested yet
 #pragma once
-#include <iostream>
-#include <thread>
-#include <chrono>
 #include <tuple>
-#include <utility> // std::forward, std::apply
+#include <utility>
+#include <yy981/sleep.h>
 
 
-// 汎用的な非同期実行関数
-template <typename Func, typename... Args>
-void dthread(std::chrono::duration time, Func&& func, Args&&... args) {
-	std::thread([time, func = std::forward<Func>(func), args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
-		while (true) {
-			std::apply(func, args);
-			std::this_thread::sleep_for(time);
-		}
-	}).detach();
-}
+class dthread {
+public:
+	template <typename Func, typename... Args>
+	dthread(ts unit, double value, Func&& func, Args&&... args) {
+		if (running) stop();
+		running=true;
+		std::thread([this, unit, value, func = std::forward<Func>(func), args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
+			while (running) {
+				std::apply(func, args);
+				sleepc(unit,value);
+			}
+		}).detach();
+	}
+/* 修正保留
+	template <typename Func, typename... Args>
+	dthread(Func&& func, Args&&... args) {
+		if (running) stop();
+		running=true;
+		std::thread([this, func = std::forward<Func>(func), args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
+			while (running) {
+				std::apply(func, args);
+			}
+		}).detach();
+	}
+*/
+
+	~dthread() {running=false;}
+	void stop() {running=false;}
+	
+	operator bool() {
+		return running;
+	}
+
+private:
+	std::atomic<bool> running{false};
+};
