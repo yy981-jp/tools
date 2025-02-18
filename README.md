@@ -1,4 +1,5 @@
 !!!!! 情報が古くなっています 現在、ホームページに説明書を作っている途中です !!!!!
+未完全ですが、こっちの方が情報は新しいです https://yy981.web.fc2.com/cpp-h/index.html
 
 # [日本語版] [→English Version](README_en.md)
 ## andor/ bool is_or(std::string, std::string...)
