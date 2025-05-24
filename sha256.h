@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <sstream>
+#include <fstream>
 #include <iomanip>
 #include <filesystem>
 #include <openssl/evp.h>

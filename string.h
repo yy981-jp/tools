@@ -5,20 +5,25 @@
 #include <unordered_map>
 
 
-namespace st {
-
-template <typename... Args> bool isor(const std::string& value, Args... args) {
+template <typename... Args> bool is_or(const std::string& value, Args... args) {
     std::vector<std::string> values = {args...};
     return std::find(values.begin(), values.end(), value) != values.end();
 }
 
-void replace(std::string& str, const std::string from, const std::string to) {
+namespace st {
+
+void replace_r(std::string& str, const std::string from, const std::string to) {
 	if (from.empty()) return; // 空文字列を弾く
 	size_t start_pos = 0;
 	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
 		str.replace(start_pos, from.size(), to);
 		start_pos += to.size();
 	}
+}
+
+std::string replace(std::string str, const std::string from, const std::string to) {
+	replace_r(str,from,to);
+	return str;
 }
 
 std::vector<std::string> find(const std::string& input, std::string start, std::string end) {
@@ -132,7 +137,7 @@ splitsi spliti(const std::string& input, const std::vector<std::string>& targets
 
 
 // char配列 to string配列
-std::vector<std::string> argc(const int i_argc, const char* const i_argv[]) {
+std::vector<std::string> charV(const int i_argc, const char* const i_argv[]) {
 	std::vector<std::string> result;
 	for (int i = 0; i < i_argc; ++i) {
 		result.emplace_back(i_argv[i]);
@@ -141,17 +146,8 @@ std::vector<std::string> argc(const int i_argc, const char* const i_argv[]) {
 }
 
 // char配列 to int配列
-std::vector<int> argci(const int i_argc, const char* i_argv[]) {
-	std::vector<int> result;
-	for (int i = 0; i < i_argc; ++i) {
-		result.emplace_back(toi(i_argv[i]));
-	}
-	return result;
-}
-
-// char比較
-bool chcmp(const std::string& cs1, const std::string& cs2) {
-	return (cs1 == cs2);
+std::vector<int> charVi(const int i_argc, const char* i_argv[]) {
+	return st::toi(st::charV(i_argc,i_argv));
 }
 
 }

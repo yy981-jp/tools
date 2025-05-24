@@ -1,13 +1,14 @@
 #pragma once
+#include <thread>
 #include <tuple>
 #include <utility>
-#include <yy981/sleep.h>
+#include <yy981/time.h>
 
 
 class dthread {
 public:
 	template <typename Func, typename... Args>
-	dthread(ts unit, double value, Func&& func, Args&&... args) {
+	dthread(tu unit, double value, Func&& func, Args&&... args) {
 		if (running) stop();
 		running=true;
 		std::thread([this, unit, value, func = std::forward<Func>(func), args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
@@ -17,9 +18,9 @@ public:
 			}
 		}).detach();
 	}
-/* 修正保留
+
 	template <typename Func, typename... Args>
-	dthread(Func&& func, Args&&... args) {
+	dthread(bool noSleep, Func&& func, Args&&... args) {
 		if (running) stop();
 		running=true;
 		std::thread([this, func = std::forward<Func>(func), args = std::make_tuple(std::forward<Args>(args)...)]() mutable {
@@ -28,7 +29,6 @@ public:
 			}
 		}).detach();
 	}
-*/
 
 	~dthread() {running=false;}
 	void stop() {running=false;}

@@ -1,5 +1,5 @@
 #ifdef BUILD
-    #define DLL __declspec(dllexport)
+    #define DLL extern "C" __declspec(dllexport)
 #else
     // #define DLL __declspec(dllimport)
 	#pragma once
