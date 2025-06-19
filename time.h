@@ -21,7 +21,7 @@ enum class tu {
 	y  // 年
 };
 
-void sleepc(tu unit, double value) {
+inline void sleepc(tu unit, double value) {
 	switch (unit) {
 		case tu::n: std::this_thread::sleep_for(std::chrono::duration<double, std::nano>(value)); break;
 		case tu::c: std::this_thread::sleep_for(std::chrono::duration<double, std::micro>(value)); break;
@@ -33,14 +33,14 @@ void sleepc(tu unit, double value) {
 	}
 }
 
-std::string getCTime(const std::string format) {
+inline std::string getCTime(const std::string format) {
 	const std::time_t t = std::time(nullptr);
 	std::ostringstream oss;
 	oss << std::put_time(std::localtime(&t), format.c_str());
 	return oss.str();
 }
 
-int getCTime(const tu unit) {
+inline int getCTime(const tu unit) {
 	auto current = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 	std::tm current_tm = *std::localtime(&current);
 	switch (unit) {
@@ -54,7 +54,7 @@ int getCTime(const tu unit) {
 	}
 }
 
-std::array<int,3> splitTime(int total_seconds) {
+inline std::array<int,3> splitTime(int total_seconds) {
 	int hours = total_seconds / 3600;
 	int minutes = (total_seconds % 3600) / 60;
 	int seconds = total_seconds % 60;
