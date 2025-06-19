@@ -31,7 +31,7 @@ public:
 	}
 
 	~dthread() {running=false;}
-	void stop() {running=false;}
+	inline void stop() {running=false;}
 	
 	operator bool() {
 		return running;
