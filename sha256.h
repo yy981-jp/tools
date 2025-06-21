@@ -4,12 +4,13 @@
 #include <fstream>
 #include <iomanip>
 #include <filesystem>
+#include <vector>
 #include <openssl/evp.h>
 
 namespace fs = std::filesystem;
 
 
-std::string sha256(const std::string& data) {
+inline std::string sha256(const std::string& data) {
 	// OpenSSL初期化
 	EVP_MD_CTX* ctx = EVP_MD_CTX_new();
 	if (!ctx) {
@@ -46,7 +47,7 @@ std::string sha256(const std::string& data) {
 	return oss.str();
 }
 
-std::string sha256f(const fs::path& filePath) {
+inline std::string sha256f(const fs::path& filePath) {
     std::ifstream file(filePath, std::ios::binary);
     if (!file.is_open()) return "ERROR";
 
