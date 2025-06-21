@@ -4,14 +4,15 @@
 #include <unordered_map>
 #include <string>
 #include <cstring>
+#include <cstdint>
 
 
 namespace UMB {
 
-void save(const std::unordered_map<std::string,std::string>& umap, const std::string& filename) {
+inline void save(const std::unordered_map<std::string,std::string>& umap, const std::string& filename) {
 	std::ofstream ofs(filename, std::ios::binary);
 	if (!ofs) {
-		std::cerr << "ファイルを開けませんでした: " << filename << std::endl;
+		throw std::runtime_error("ファイルを開けませんでした: " + filename);
 		return;
 	}
 
@@ -28,11 +29,11 @@ void save(const std::unordered_map<std::string,std::string>& umap, const std::st
 	}
 }
 
-std::unordered_map<std::string,std::string> load(const std::string& filename) {
+inline std::unordered_map<std::string,std::string> load(const std::string& filename) {
 	std::unordered_map<std::string, std::string> umap;
 	std::ifstream ifs(filename, std::ios::binary);
 	if (!ifs) {
-		std::cerr << "ファイルを開けませんでした: " << filename << std::endl;
+		throw std::runtime_error("ファイルを開けませんでした: " + filename);
 		return umap;
 	}
 
