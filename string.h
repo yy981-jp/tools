@@ -3,16 +3,17 @@
 #include <vector>
 #include <sstream>
 #include <unordered_map>
+#include <algorithm>
 
 
-template <typename... Args> bool is_or(const std::string& value, Args... args) {
+template <typename... Args> inline bool is_or(const std::string& value, Args... args) {
     std::vector<std::string> values = {args...};
     return std::find(values.begin(), values.end(), value) != values.end();
 }
 
 namespace st {
 
-void replace_r(std::string& str, const std::string from, const std::string to) {
+inline void replace_r(std::string& str, const std::string from, const std::string to) {
 	if (from.empty()) return; // 空文字列を弾く
 	size_t start_pos = 0;
 	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
@@ -21,12 +22,12 @@ void replace_r(std::string& str, const std::string from, const std::string to) {
 	}
 }
 
-std::string replace(std::string str, const std::string from, const std::string to) {
+inline std::string replace(std::string str, const std::string from, const std::string to) {
 	replace_r(str,from,to);
 	return str;
 }
 
-std::vector<std::string> find(const std::string& input, std::string start, std::string end) {
+inline std::vector<std::string> find(const std::string& input, std::string start, std::string end) {
 	std::vector<std::string> output;
 	int startpos  = 0;
 	while(true) {
@@ -41,7 +42,7 @@ std::vector<std::string> find(const std::string& input, std::string start, std::
 	return output;
 }
 
-int toi(const std::string& str) {
+inline int toi(const std::string& str) {
 	std::string filtered;
 	std::copy_if(str.begin(), str.end(), std::back_inserter(filtered),
 		[](unsigned char c) { return std::isdigit(c); });
@@ -50,7 +51,7 @@ int toi(const std::string& str) {
 	return filtered.empty() ? 0 : std::stoi(filtered);
 }
 
-std::vector<int> toi(const std::vector<std::string>& input) {
+inline std::vector<int> toi(const std::vector<std::string>& input) {
 	std::vector<int> result;
 	for (std::string e: input) {
 		result.emplace_back(st::toi(e));
@@ -59,7 +60,7 @@ std::vector<int> toi(const std::vector<std::string>& input) {
 }
 
 // split to string
-std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
+inline std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
 	std::vector<std::string> tokens;
 	size_t start = 0, end;
 
@@ -73,7 +74,7 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
 }
 
 // split to int
-std::vector<int> spliti(const std::string& str, const std::string& delimiter) {
+inline std::vector<int> spliti(const std::string& str, const std::string& delimiter) {
 	std::vector<std::string> output = split(str,delimiter);
 	std::vector<int> result;
 	for (std::string e: output) {
@@ -86,7 +87,7 @@ std::vector<int> spliti(const std::string& str, const std::string& delimiter) {
 typedef std::unordered_map<std::string,std::vector<std::string>> splits;
 typedef std::unordered_map<std::string,std::vector<int>> splitsi;
 	
-splits split(const std::string& input, const std::vector<std::string>& targets) {
+inline splits split(const std::string& input, const std::vector<std::string>& targets) {
 	splits result;
 	std::string current = input;
 	std::string current_segment;
@@ -124,7 +125,7 @@ splits split(const std::string& input, const std::vector<std::string>& targets) 
 	return result;
 }
 
-splitsi spliti(const std::string& input, const std::vector<std::string>& targets) {
+inline splitsi spliti(const std::string& input, const std::vector<std::string>& targets) {
 	splitsi result;
 	splits output = split(input,targets);
 	for (const auto& [key, segments] : output) {
@@ -137,7 +138,7 @@ splitsi spliti(const std::string& input, const std::vector<std::string>& targets
 
 
 // char配列 to string配列
-std::vector<std::string> charV(const int i_argc, const char* const i_argv[]) {
+inline std::vector<std::string> charV(const int i_argc, const char* const i_argv[]) {
 	std::vector<std::string> result;
 	for (int i = 0; i < i_argc; ++i) {
 		result.emplace_back(i_argv[i]);
@@ -146,7 +147,7 @@ std::vector<std::string> charV(const int i_argc, const char* const i_argv[]) {
 }
 
 // char配列 to int配列
-std::vector<int> charVi(const int i_argc, const char* i_argv[]) {
+inline std::vector<int> charVi(const int i_argc, const char* i_argv[]) {
 	return st::toi(st::charV(i_argc,i_argv));
 }
 
