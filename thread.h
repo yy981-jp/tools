@@ -5,26 +5,6 @@
 #include <atomic>
 #include <yy981/time.h>
 
-#ifndef YHO
-
-class dthread {
-public:
-	template <typename Func, typename... Args>
-	dthread(tu unit, double value, Func&& func, Args&&... args);
-
-	template <typename Func, typename... Args>
-	dthread(bool noSleep, Func&& func, Args&&... args);
-
-	~dthread();
-	inline void stop() {running=false;};
-	
-	operator bool();
-
-private:
-	std::atomic<bool> running;
-};
-
-#else
 
 class dthread {
 public:
@@ -61,4 +41,3 @@ public:
 private:
 	std::atomic<bool> running{false};
 };
-#endif
