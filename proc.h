@@ -4,7 +4,7 @@
 #include <vector>
 
 namespace proc {
-	int start(const std::string app, std::string arg = "", const bool wait = false, const std::string& cd = "") {
+	inline int start(const std::string app, std::string arg = "", const bool wait = false, const std::string& cd = "") {
 		STARTUPINFO si = { sizeof(si) };
 		PROCESS_INFORMATION pi;
 

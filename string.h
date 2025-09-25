@@ -151,4 +151,15 @@ inline std::vector<int> charVi(const int i_argc, const char* i_argv[]) {
 	return st::toi(st::charV(i_argc,i_argv));
 }
 
+inline size_t size(const std::string& input) {
+	unsigned char lead;
+	size_t char_size=0, input_size=0, pos;
+	for (pos = 0; pos < input.size(); pos += char_size) {
+		input_size++;
+		lead = input[pos];
+		if (lead < 0x80) char_size=1; else if (lead < 0xE0) char_size=2; else if (lead < 0xF0) char_size=3; else char_size=4;
+	}
+	return input_size;
+}
+
 }
