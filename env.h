@@ -10,7 +10,7 @@
 #endif
 
 // 簡易版
-std::string getEnv(const std::string& target, const bool slash = true) {
+inline std::string getEnv(const std::string& target, const bool slash = true) {
 	std::string result = std::getenv(target.c_str());
 	if (!slash) return result;
 	return st::replace(result,"\\","/");
@@ -35,7 +35,7 @@ std::string getEnv(const std::string& target, const bool backSlash) {
 }
 */
 
-bool setEnv(const char* name, const char* value, bool overrideExist = true) {
+inline bool setEnv(const char* name, const char* value, bool overrideExist = true) {
 #ifdef _WIN32
 	if (_putenv_s(name, value)) return false; else return true;
 #else
@@ -44,7 +44,7 @@ bool setEnv(const char* name, const char* value, bool overrideExist = true) {
 #endif
 }
 
-bool setEnvEx(const std::string& varName, const std::string& varValue) {
+inline bool setEnvEx(const std::string& varName, const std::string& varValue) {
 #ifdef _WIN32
 	HKEY hKey;
 	LONG result = RegOpenKeyExA(HKEY_CURRENT_USER, "Environment", 0, KEY_SET_VALUE, &hKey);
