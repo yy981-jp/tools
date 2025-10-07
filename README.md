@@ -2,7 +2,7 @@
 
 大変すぎるので中止します↑
 
-未完全ですが、このリンク先の方が情報は新しいです https://yy981.web.fc2.com/cpp-h/index.html
+未完全ですが、このリンク先の方が情報は新しいです https://yy981.web.fc2.com/app/cpp-h/index.html
 
 # [日本語版] [→English Version](README_en.md)
 ## andor/ bool is_or(std::string, std::string...)
