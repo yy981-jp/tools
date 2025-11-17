@@ -8,12 +8,20 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <filesystem>
 #include <unordered_map>
+
+namespace fs = std::filesystem;
 
 
 class UMT {
 public:
-    UMT(const std::string& filename): fname(filename) {
+	UMT(const std::string& filename): fname(filename) {
+		if (!fs::exists(fname)) {
+			std::ofstream ofs(fname);
+			if (!ofs) throw std::runtime_error("UMT::UMT() ofstream");
+			return;
+		}
 		std::ifstream ifs(fname);
 		if (!ifs) throw std::runtime_error("UMT::UMT() ifstream");
 		std::string line;
@@ -24,12 +32,12 @@ public:
 		return data[key];
 	}
 	
-    const std::string& operator[](const std::string& key) const {
+	const std::string& operator[](const std::string& key) const {
 		static const std::string empty;
-        auto it = data.find(key);
-        if (it != data.end()) return it->second;
+		auto it = data.find(key);
+		if (it != data.end()) return it->second;
 		else return empty;
-    }
+	}
 	
 	UMT& operator-=(const std::string& key) {
 		data.erase(key);
@@ -49,7 +57,7 @@ public:
 		return key + separator + value;
 	}
 	
-    std::unordered_map<std::string, std::string> data;
+	std::unordered_map<std::string, std::string> data;
 
 	void save() {
 		std::ofstream ofs(fname);

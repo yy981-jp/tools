@@ -40,6 +40,11 @@ inline std::string getCTime(const std::string format) {
 	return oss.str();
 }
 
+inline int64_t getUnixTime() {
+	return static_cast<int64_t>(std::time(nullptr));
+}
+
+
 inline int getCTime(const tu unit) {
 	auto current = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 	std::tm current_tm = *std::localtime(&current);
