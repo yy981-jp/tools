@@ -6,7 +6,7 @@
 
 namespace proc {
 #ifdef UNICODE
-	std::wstring to_wstring(const std::string& u8) {
+	inline std::wstring to_wstring(const std::string& u8) {
 		return boost::locale::conv::to_utf<wchar_t>(u8, "UTF-8");
 	}
 

@@ -4,6 +4,9 @@
 #include <sstream>
 #include <unordered_map>
 #include <algorithm>
+#ifdef UNICODE
+	#include <boost/locale.hpp>
+#endif
 
 
 template <typename... Args> inline bool is_or(const std::string& value, Args... args) {
@@ -12,6 +15,13 @@ template <typename... Args> inline bool is_or(const std::string& value, Args... 
 }
 
 namespace st {
+
+#ifdef UNICODE
+	inline std::wstring to_wstring(const std::string& u8) {
+		return boost::locale::conv::to_utf<wchar_t>(u8, "UTF-8");
+	}
+#endif
+
 
 inline void replace_r(std::string& str, const std::string from, const std::string to) {
 	if (from.empty()) return; // 空文字列を弾く
