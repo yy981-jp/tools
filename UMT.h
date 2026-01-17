@@ -25,7 +25,10 @@ public:
 		std::ifstream ifs(fname);
 		if (!ifs) throw std::runtime_error("UMT::UMT() ifstream");
 		std::string line;
-		while (std::getline(ifs,line)) separate(line);
+		while (std::getline(ifs,line)) {
+			if (line.empty()) continue;
+			separate(line);
+		}
 	}
 	
 	std::string& operator[](const std::string& key) {
