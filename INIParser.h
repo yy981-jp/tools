@@ -4,14 +4,40 @@
 #include <sstream>
 #include <unordered_map>
 
+/**
+ * @file INIParser.h
+ * @brief INI ファイルパーサー
+ *
+ * セクションとキーバリュー形式の INI ファイルを読み込み、
+ * セクション名とキーを指定して値を取得できます。
+ * コメント行（; または #）と空行は無視されます。
+ */
+
+/**
+ * @class INIParser
+ * @brief INI ファイルを解析してキーと値を取得するクラス
+ *
+ * @code
+ * INIParser parser("config.ini");
+ * std::string host = parser.get("Server", "host");
+ * @endcode
+ */
 class INIParser {
 public:
-    // コンストラクタでINIファイルをロード
+    /**
+     * @brief コンストラクタ。INI ファイルをロードして解析する
+     * @param filename 読み込む INI ファイルのパス
+     */
     INIParser(const std::string& filename) {
         load(filename);
     }
 
-    // 値を取得（セクションとキーを指定）
+    /**
+     * @brief 指定セクション・キーに対応する値を取得する
+     * @param section セクション名（例: "Database"）
+     * @param key     キー名（例: "host"）
+     * @return 対応する値の文字列。見つからない場合は "UNKNOWN"
+     */
     std::string get(const std::string& section, const std::string& key) const {
         auto secIt = data.find(section);
         if (secIt != data.end()) {
@@ -24,9 +50,13 @@ public:
     }
 
 private:
+    /// @brief [セクション名][キー名] → 値 の二重マップ
     std::unordered_map<std::string, std::unordered_map<std::string, std::string>> data;
 
-    // INIファイルをロードする
+    /**
+     * @brief INI ファイルを読み込んで data に格納する
+     * @param filename 読み込む INI ファイルのパス
+     */
     void load(const std::string& filename) {
         std::ifstream file(filename);
         if (!file.is_open()) {
@@ -60,7 +90,11 @@ private:
         }
     }
 
-    // 文字列の余分な空白を除去
+    /**
+     * @brief 文字列の先頭・末尾にある空白文字を除去する
+     * @param str トリム対象の文字列
+     * @return 両端の空白を除去した文字列
+     */
     std::string trim(const std::string& str) const {
         const char* whitespace = " \t\n\r\f\v";
         size_t start = str.find_first_not_of(whitespace);

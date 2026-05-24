@@ -4,16 +4,49 @@
 #include <string>
 #include <stdexcept>
 
+/**
+ * @file connect.h
+ * @brief Windows 共有メモリ（名前付きファイルマッピング）通信クラス
+ *
+ * Windows の CreateFileMapping / OpenFileMapping API を使用して
+ * プロセス間共有メモリを確立し、任意の型のデータを読み書きします。
+ *
+ * @warning このコードはまだテストされていません (y9INC: This code has not been tested yet)
+ */
 
+/**
+ * @class PConnect
+ * @brief 名前付き共有メモリを介してプロセス間通信を行うテンプレートクラス
+ * @tparam T 共有するデータの型
+ *
+ * 2 つのコンストラクタで「作成モード」と「オープンモード」を区別します：
+ * - 作成モード: `PConnect(name, CREATEMODE___IMiNaSi)` → 共有メモリを新規作成
+ * - オープンモード: `PConnect(name)` → 既存の共有メモリに接続
+ *
+ * @code
+ * // プロセスA（作成側）
+ * PConnect<int> server("MySharedMem", 0);
+ * server.write(42);
+ *
+ * // プロセスB（接続側）
+ * PConnect<int> client("MySharedMem");
+ * int val = client.read(); // 42
+ * @endcode
+ */
 template<typename T>
 class PConnect {
 private:
-	HANDLE hMapFile;       // 共有メモリのハンドル
-	T* pBuf;               // マッピングされたメモリ（テンプレート型ポインタ）
-	std::string name;     // 共有メモリの名前
+	HANDLE hMapFile;       ///< 共有メモリのハンドル
+	T* pBuf;               ///< マッピングされたメモリ（テンプレート型ポインタ）
+	std::string name;      ///< 共有メモリの名前（"Global\\" プレフィックス付き）
 
 public:
-	// コンストラクタ（作成モード）
+	/**
+	 * @brief 共有メモリを新規作成するコンストラクタ（作成モード）
+	 * @param memName              共有メモリの名前（"Global\\" が自動付加される）
+	 * @param CREATEMODE___IMiNaSi 作成モードであることを示すダミー引数（値は使用しない）
+	 * @throws std::runtime_error 共有メモリの作成またはマッピングに失敗した場合
+	 */
 	PConnect(const std::string& memName, int8_t CREATEMODE___IMiNaSi)
 		: hMapFile(nullptr), pBuf(nullptr), name("Global\\"+memName) {
 		hMapFile = CreateFileMapping(
@@ -24,9 +57,7 @@ public:
 			sizeof(T),                    // サイズ（低位）
 			name.c_str()                  // 共有メモリの名前
 		);
-		// std::cout << "DEBUG:::EM: " <<  << "\n";
 
-		// if (!hMapFile) throw std::runtime_error("共有メモリの作成に失敗しました WinAPI: " + getLastErrorAsString());
 		if (hMapFile == NULL || hMapFile == INVALID_HANDLE_VALUE) {
 			DWORD errorCode = GetLastError();
 			std::cerr << "共有メモリ作成エラー: " << errorCode << " (" << PConnect::getLastErrorAsString() << ")" << std::endl;
@@ -50,7 +81,11 @@ public:
 		}
 	}
 
-	// コンストラクタ（オープンモード）
+	/**
+	 * @brief 既存の共有メモリに接続するコンストラクタ（オープンモード）
+	 * @param memName 接続する共有メモリの名前（"Global\\" が自動付加される）
+	 * @throws std::runtime_error 共有メモリのオープンまたはマッピングに失敗した場合
+	 */
 	PConnect(const std::string& memName)
 		: hMapFile(nullptr), pBuf(nullptr), name("Global\\"+memName) {
 		hMapFile = OpenFileMapping(FILE_MAP_READ | FILE_MAP_WRITE, FALSE, name.c_str());
@@ -63,7 +98,11 @@ public:
 		}
 	}
 
-	// データの書き込み
+	/**
+	 * @brief 共有メモリにデータを書き込む
+	 * @param data 書き込むデータ（型 T）
+	 * @throws std::runtime_error マッピングポインタが無効な場合
+	 */
 	void write(const T& data) {
 		if (!pBuf) {
 			throw std::runtime_error("書き込み対象が無効です");
@@ -71,7 +110,11 @@ public:
 		*pBuf = data;
 	}
 
-	// データの読み込み
+	/**
+	 * @brief 共有メモリからデータを読み込む
+	 * @return 共有メモリの現在値（型 T のコピー）
+	 * @throws std::runtime_error マッピングポインタが無効な場合
+	 */
 	T read() const {
 		if (!pBuf) {
 			throw std::runtime_error("読み込み対象が無効です");
@@ -79,6 +122,9 @@ public:
 		return *pBuf;
 	}
 
+	/**
+	 * @brief デストラクタ。マッピングとハンドルを解放する
+	 */
 	~PConnect() {
 		if (pBuf) {
 			UnmapViewOfFile(pBuf);
@@ -89,17 +135,18 @@ public:
 	}
 	
 private:
+	/**
+	 * @brief 最後の Windows エラーコードのメッセージ文字列を取得する
+	 * @return エラーメッセージ文字列。エラーがない場合は "エラーは発生していません"
+	 */
 	static std::string getLastErrorAsString() {
-		// エラーコードを取得
 		DWORD errorMessageID = ::GetLastError();
 		if (errorMessageID == 0) {
-			return "エラーは発生していません"; // エラーがない場合
+			return "エラーは発生していません";
 		}
 
-		// エラーメッセージを格納するバッファ
 		LPSTR messageBuffer = nullptr;
 
-		// エラーメッセージを取得
 		size_t size = FormatMessageA(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 			NULL,
@@ -111,7 +158,6 @@ private:
 
 		std::string message(messageBuffer, size);
 
-		// バッファを解放
 		LocalFree(messageBuffer);
 
 		return message;

@@ -9,7 +9,20 @@
 	#include <unistd.h>
 #endif
 
-// 簡易版
+/**
+ * @file env.h
+ * @brief 環境変数取得・設定ユーティリティ
+ *
+ * クロスプラットフォーム（Windows / UNIX 系）で環境変数を取得・設定する関数を提供します。
+ * Windows ではレジストリへの恒久的な書き込みにも対応しています。
+ */
+
+/**
+ * @brief 環境変数の値を取得する（簡易版）
+ * @param target 取得する環境変数名（例: "PATH"）
+ * @param slash  true の場合、バックスラッシュをスラッシュに変換する（デフォルト: true）
+ * @return 環境変数の値文字列。slash=true の場合は \ を / に置換済み
+ */
 inline std::string getEnv(const std::string& target, const bool slash = true) {
 	std::string result = std::getenv(target.c_str());
 	if (!slash) return result;
@@ -35,6 +48,13 @@ std::string getEnv(const std::string& target, const bool backSlash) {
 }
 */
 
+/**
+ * @brief 環境変数をプロセス内で設定する（現在のプロセスのみ有効）
+ * @param name          設定する環境変数名
+ * @param value         設定する値
+ * @param overrideExist 既存の変数を上書きするか（現在の実装では常に上書き）
+ * @return 設定に成功した場合 true、失敗した場合 false
+ */
 inline bool setEnv(const char* name, const char* value, bool overrideExist = true) {
 #ifdef _WIN32
 	if (_putenv_s(name, value)) return false; else return true;
@@ -44,6 +64,14 @@ inline bool setEnv(const char* name, const char* value, bool overrideExist = tru
 #endif
 }
 
+/**
+ * @brief 環境変数を Windows レジストリ (HKCU\\Environment) に恒久的に設定する
+ * @param varName  設定する環境変数名
+ * @param varValue 設定する値
+ * @return 設定に成功した場合 true、失敗した場合 false
+ * @note Windows 専用。設定後に WM_SETTINGCHANGE を送信し他のアプリに変更を通知します。
+ * @warning UNIX 系では常に false を返し、コンパイル警告が発生します。
+ */
 inline bool setEnvEx(const std::string& varName, const std::string& varValue) {
 #ifdef _WIN32
 	HKEY hKey;
