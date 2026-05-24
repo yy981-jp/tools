@@ -1,3 +1,16 @@
+/**
+ * @file UMB.h
+ * @brief unordered_map をバイナリ形式で保存・読み込みする機能を提供
+ * @details std::unordered_map<std::string, std::string>をバイナリファイルに直列化して
+ *          保存・復元するユーティリティ関数を提供します
+ * @author yy981
+ * @version 1.0
+ * 
+ * @note バイナリ形式:
+ *   - キー: 固定64バイト(SHA-256相当)
+ *   - 値のサイズ: uint32_t(4バイト)
+ *   - 値データ: 可変長
+ */
 // unordered_map binary
 #pragma once
 #include <fstream>
@@ -9,6 +22,15 @@
 
 namespace UMB {
 
+/**
+ * @brief unordered_mapをバイナリファイルに保存
+ * @param umap 保存するunordered_map
+ * @param filename 保存先ファイルパス
+ * @exception std::runtime_error ファイルが開けない場合
+ * 
+ * @details
+ * キーは64バイト固定サイズで出力され、値はサイズ情報付きで出力されます
+ */
 inline void save(const std::unordered_map<std::string,std::string>& umap, const std::string& filename) {
 	std::ofstream ofs(filename, std::ios::binary);
 	if (!ofs) {
@@ -29,6 +51,15 @@ inline void save(const std::unordered_map<std::string,std::string>& umap, const 
 	}
 }
 
+/**
+ * @brief バイナリファイルからunordered_mapを読み込む
+ * @param filename 読み込むファイルパス
+ * @return 復元されたunordered_map
+ * @exception std::runtime_error ファイルが開けない場合
+ * 
+ * @details
+ * ファイルの形式は save()関数が出力した形式と同じです
+ */
 inline std::unordered_map<std::string,std::string> load(const std::string& filename) {
 	std::unordered_map<std::string, std::string> umap;
 	std::ifstream ifs(filename, std::ios::binary);

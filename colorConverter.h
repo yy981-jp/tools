@@ -1,3 +1,17 @@
+/**
+ * @file colorConverter.h
+ * @brief 複数の色空間間の変換機能を提供
+ * @details RGB、CMYK、HSL、HSB、Lab色空間間の相互変換関数を提供
+ * @author yy981
+ * @version 1.0
+ * 
+ * @note
+ * - RGB: 赤、緑、青の成分 (0-255)
+ * - CMYK: シアン、マゼンタ、黄色、黒インク比 (0.0-1.0)
+ * - HSL: 色相、彩度、明度 (H: 0-360°, S/L: 0.0-1.0)
+ * - HSB: 色相、彩度、明るさ (H: 0-360°, S/B: 0.0-1.0)
+ * - Lab: 知覚的な明度、a成分、b成分
+ */
 #pragma once
 #include <iostream>
 #include <cmath>
@@ -8,38 +22,77 @@
 #include <algorithm>
 
 
+/**
+ * @namespace ccv
+ * @brief 色空間変換関数と色構造体の名前空間
+ */
 namespace ccv {
+	/**
+	 * @struct RGB
+	 * @brief RGB色を表す構造体
+	 * @details 赤(R)、緑(G)、青(B)の各成分を0-255の値で表現
+	 */
 	struct RGB {
-		int r, g, b;
+		int r, g, b; ///< 赤、緑、青の成分 (0-255)
+		/**
+		 * @brief コンストラクタ
+		 * @param ir 赤成分 (0-255)
+		 * @param ig 緑成分 (0-255)
+		 * @param ib 青成分 (0-255)
+		 */
 		RGB(int ir, int ig, int ib): r(ir), g(ig), b(ib) {}
 		RGB() {}
 	};
 
+	/**
+	 * @struct CMYK
+	 * @brief CMYK色を表す構造体
+	 * @details シアン、マゼンタ、黄色、黒インクの各比率を0.0-1.0で表現
+	 */
 	struct CMYK {
-		float c, m, y, k;
+		float c, m, y, k; ///< シアン、マゼンタ、黄色、黒インク比 (0.0-1.0)
 		CMYK(float ic, float im, float iy, float ik): c(ic), m(im), y(iy), k(ik) {}
 		CMYK() {}
 	};
 
+	/**
+	 * @struct HSL
+	 * @brief HSL色を表す構造体
+	 * @details 色相、彩度、明度を表現
+	 */
 	struct HSL {
-		float h, s, l;
+		float h, s, l; ///< 色相(0-360°)、彩度(0.0-1.0)、明度(0.0-1.0)
 		HSL(float ih, float is, float il): h(ih), s(is), l(il) {}
 		HSL() {}
 	};
 
+	/**
+	 * @struct HSB
+	 * @brief HSB(HSV)色を表す構造体
+	 * @details 色相、彩度、明るさを表現
+	 */
 	struct HSB {
-		float h, s, b;
+		float h, s, b; ///< 色相(0-360°)、彩度(0.0-1.0)、明るさ(0.0-1.0)
 		HSB(float ih, float is, float ib): h(ih), s(is), b(ib) {}
 		HSB() {}
 	};
 
+	/**
+	 * @struct Lab
+	 * @brief Lab色を表す構造体
+	 * @details 知覚的な明度とa*b*成分を表現
+	 */
 	struct Lab {
-		float l, a, b;
+		float l, a, b; ///< L成分(0-100)、a成分(-128～127)、b成分(-128～127)
 		Lab(float il, float ia, float ib): l(il), a(ia), b(ib) {}
 		Lab() {}
 	};
 
-	// HEXを数値として受け取り、RGBに変換する関数
+	/**
+	 * @brief 16進数(整数)をRGBに変換
+	 * @param hex 16進数カラーコード (0xRRGGBB形式)
+	 * @return RGB構造体
+	 */
 	RGB hexToRgb(int hex) {
 		RGB rgb;
 		rgb.r = (hex >> 16) & 0xFF;  // 上位8ビットを取得
@@ -48,13 +101,21 @@ namespace ccv {
 		return rgb;
 	}
 
-	// RGBからHEXに変換する関数
+	/**
+	 * @brief RGBを16進数(整数)に変換
+	 * @param rgb RGB構造体
+	 * @return 16進数カラーコード (0xRRGGBB形式)
+	 */
 	int rgbToHex(RGB rgb) {
 		// RGBの値を16進数に変換して1つの整数として返す
 		return (rgb.r << 16) | (rgb.g << 8) | rgb.b;
 	}
 
-	// RGBからCMYKへの変換
+	/**
+	 * @brief RGBをCMYKに変換
+	 * @param rgb RGB構造体
+	 * @return 変換されたCMYK構造体
+	 */
 	CMYK rgbToCmyk(RGB rgb) {
 		CMYK cmyk;
 		float r = rgb.r / 255.0;
@@ -72,7 +133,11 @@ namespace ccv {
 		return cmyk;
 	}
 
-	// CMYKからRGBへの変換
+	/**
+	 * @brief CMYKをRGBに変換
+	 * @param cmyk CMYK構造体
+	 * @return 変換されたRGB構造体
+	 */
 	RGB cmykToRgb(CMYK cmyk) {
 		RGB rgb;
 		rgb.r = static_cast<int>((1 - cmyk.c) * (1 - cmyk.k) * 255);
@@ -81,7 +146,11 @@ namespace ccv {
 		return rgb;
 	}
 
-	// RGBからHSLへの変換
+	/**
+	 * @brief RGBをHSLに変換
+	 * @param rgb RGB構造体
+	 * @return 変換されたHSL構造体
+	 */
 	HSL rgbToHsl(RGB rgb) {
 		HSL hsl;
 		float r = rgb.r / 255.0;
@@ -109,7 +178,11 @@ namespace ccv {
 		return hsl;
 	}
 
-	// HSLからRGBへの変換
+	/**
+	 * @brief HSLをRGBに変換
+	 * @param hsl HSL構造体
+	 * @return 変換されたRGB構造体
+	 */
 	RGB hslToRgb(HSL hsl) {
 		RGB rgb;
 		float c = (1 - std::abs(2 * hsl.l - 1)) * hsl.s;
@@ -137,7 +210,11 @@ namespace ccv {
 		return rgb;
 	}
 
-	// RGBからHSBへの変換
+	/**
+	 * @brief RGBをHSBに変換
+	 * @param rgb RGB構造体
+	 * @return 変換されたHSB構造体
+	 */
 	HSB rgbToHsb(RGB rgb) {
 		HSB hsb;
 		float r = rgb.r / 255.0;
@@ -167,7 +244,11 @@ namespace ccv {
 		return hsb;
 	}
 
-	// HSBからRGBへの変換
+	/**
+	 * @brief HSBをRGBに変換
+	 * @param hsb HSB構造体
+	 * @return 変換されたRGB構造体
+	 */
 	RGB hsbToRgb(HSB hsb) {
 		RGB rgb;
 		float c = hsb.b * hsb.s;
@@ -195,7 +276,12 @@ namespace ccv {
 		return rgb;
 	}
 
-	// RGBからLabへの変換
+	/**
+	 * @brief RGBをLab色空間に変換
+	 * @param rgb RGB構造体
+	 * @return 変換されたLab構造体
+	 * @details sRGB -> XYZ -> Labの2段階変換を実行
+	 */
 	Lab rgbToLab(RGB rgb) {
 		Lab lab;
 		float r = rgb.r / 255.0;
@@ -227,7 +313,12 @@ namespace ccv {
 		return lab;
 	}
 
-	// LabからRGBへの変換
+	/**
+	 * @brief Lab色空間をRGBに変換
+	 * @param lab Lab構造体
+	 * @return 変換されたRGB構造体
+	 * @details Lab -> XYZ -> sRGBの逆変換を実行
+	 */
 	RGB labToRgb(Lab lab) {
 		RGB rgb;
 		float y = (lab.l + 16) / 116;

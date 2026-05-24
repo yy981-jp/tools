@@ -1,3 +1,13 @@
+/**
+ * @file connect.h
+ * @brief Windows共有メモリを使用したプロセス間通信(IPC)テンプレートクラスを提供
+ * @details テンプレート型のデータをプロセス間で共有メモリを通じて送受信
+ * @author yy981
+ * @version 1.0
+ * 
+ * @warning このコードは未テストです
+ * @note Windows専用 (INVALID_HANDLE_VALUE, CreateFileMapping等を使用)
+ */
 #warning y9INC: This code has not been tested yet
 #pragma once
 #include <windows.h>
@@ -5,15 +15,30 @@
 #include <stdexcept>
 
 
+/**
+ * @brief テンプレート型データを共有メモリで送受信するクラス
+ * @tparam T 共有するデータ型
+ * 
+ * @details
+ * - 作成モード: コンストラクタで第2引数を指定して新規作成
+ * - オープンモード: コンストラクタで第2引数なしで既存の共有メモリに接続
+ * - メモリはグローバル共有メモリ(Global\\xxx)として管理
+ */
 template<typename T>
 class PConnect {
 private:
-	HANDLE hMapFile;       // 共有メモリのハンドル
-	T* pBuf;               // マッピングされたメモリ（テンプレート型ポインタ）
-	std::string name;     // 共有メモリの名前
+	HANDLE hMapFile;       ///< 共有メモリのハンドル
+	T* pBuf;               ///< マッピングされたメモリ（テンプレート型ポインタ）
+	std::string name;     ///< 共有メモリの名前
 
 public:
-	// コンストラクタ（作成モード）
+	/**
+	 * @brief コンストラクタ（作成モード）
+	 * @param memName 共有メモリの名前（Global\\プレフィックスが自動付与される）
+	 * @param CREATEMODE___IMiNaSi ダミー引数（作成モードのマーカー）
+	 * @exception std::runtime_error 共有メモリの作成・マッピングに失敗した場合
+	 * @details 既存の共有メモリがある場合はエラーになります
+	 */
 	PConnect(const std::string& memName, int8_t CREATEMODE___IMiNaSi)
 		: hMapFile(nullptr), pBuf(nullptr), name("Global\\"+memName) {
 		hMapFile = CreateFileMapping(
@@ -50,7 +75,12 @@ public:
 		}
 	}
 
-	// コンストラクタ（オープンモード）
+	/**
+	 * @brief コンストラクタ（オープンモード）
+	 * @param memName 接続する共有メモリの名前
+	 * @exception std::runtime_error 共有メモリのオープン・マッピングに失敗した場合
+	 * @details 既存の共有メモリに接続します
+	 */
 	PConnect(const std::string& memName)
 		: hMapFile(nullptr), pBuf(nullptr), name("Global\\"+memName) {
 		hMapFile = OpenFileMapping(FILE_MAP_READ | FILE_MAP_WRITE, FALSE, name.c_str());
@@ -63,7 +93,11 @@ public:
 		}
 	}
 
-	// データの書き込み
+	/**
+	 * @brief 共有メモリにデータを書き込む
+	 * @param data 書き込むデータ
+	 * @exception std::runtime_error バッファが無効な場合
+	 */
 	void write(const T& data) {
 		if (!pBuf) {
 			throw std::runtime_error("書き込み対象が無効です");
@@ -71,7 +105,11 @@ public:
 		*pBuf = data;
 	}
 
-	// データの読み込み
+	/**
+	 * @brief 共有メモリからデータを読み込む
+	 * @return 読み込んだデータ
+	 * @exception std::runtime_error バッファが無効な場合
+	 */
 	T read() const {
 		if (!pBuf) {
 			throw std::runtime_error("読み込み対象が無効です");
@@ -79,6 +117,10 @@ public:
 		return *pBuf;
 	}
 
+	/**
+	 * @brief デストラクタ - リソースを解放
+	 * @details マップビューを解除し、ハンドルをクローズ
+	 */
 	~PConnect() {
 		if (pBuf) {
 			UnmapViewOfFile(pBuf);
@@ -89,6 +131,11 @@ public:
 	}
 	
 private:
+	/**
+	 * @brief 最後のエラーをメッセージ文字列に変換
+	 * @return エラーメッセージ
+	 * @static
+	 */
 	static std::string getLastErrorAsString() {
 		// エラーコードを取得
 		DWORD errorMessageID = ::GetLastError();

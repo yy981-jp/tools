@@ -1,3 +1,11 @@
+/**
+ * @file sha256.h
+ * @brief SHA-256ハッシュ値を計算する機能を提供
+ * @details OpenSSL/EVPライブラリを使用したSHA-256ハッシュ計算
+ * @author yy981
+ * @version 1.0
+ * @note OpenSSL(libssl-dev)が必要
+ */
 #pragma once
 #include <filesystem>
 #include <sstream>
@@ -10,6 +18,15 @@
 namespace fs = std::filesystem;
 
 
+/**
+ * @brief 文字列のSHA-256ハッシュ値を計算
+ * @param data ハッシュ対象の文字列
+ * @return 64文字の16進数ハッシュ値文字列
+ * @exception std::runtime_error EVP操作に失敗した場合
+ * @details
+ * OpenSSL EVP APIを使用して標準的なSHA-256を計算
+ * 返される文字列は小文字の16進数表記（ゼロ埋めなし）
+ */
 inline std::string sha256(const std::string& data) {
 	// OpenSSL初期化
 	EVP_MD_CTX* ctx = EVP_MD_CTX_new();
@@ -47,6 +64,15 @@ inline std::string sha256(const std::string& data) {
 	return oss.str();
 }
 
+/**
+ * @brief ファイルのSHA-256ハッシュ値を計算
+ * @param filePath ハッシュ対象のファイルパス
+ * @return 64文字の16進数ハッシュ値文字列、またはエラー時は"ERROR"
+ * @exception std::runtime_error EVP操作に失敗した場合
+ * @details
+ * ファイルを8192バイトのチャンクで読み込みながらハッシュを計算
+ * 大きなファイルでもメモリ効率的に処理可能
+ */
 inline std::string sha256f(const fs::path& filePath) {
     std::ifstream file(filePath, std::ios::binary);
     if (!file.is_open()) return "ERROR";

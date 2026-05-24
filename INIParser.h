@@ -1,17 +1,48 @@
+/**
+ * @file INIParser.h
+ * @brief INIファイルのパースと値取得を行うクラスを提供する
+ * @details INI形式の設定ファイルを読み込み、セクションとキーから値を取得するシンプルなパーサー
+ * @author yy981
+ * @version 1.0
+ * 
+ * @note INIファイル形式:
+ *   - セクション: [SectionName]
+ *   - キー=値: key=value
+ *   - コメント: ; または # で始まる行
+ */
+
 #pragma once
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
 
+/**
+ * @class INIParser
+ * @brief INIファイルをパースして設定値を管理するクラス
+ * 
+ * @details
+ * INI形式の設定ファイルを読み込み、セクション名とキーを指定して値を取得できます。
+ * ファイルの読み込みはコンストラクタで自動的に実行されます。
+ * 存在しないキーに対しては"UNKNOWN"を返します。
+ */
 class INIParser {
 public:
-    // コンストラクタでINIファイルをロード
+    /**
+     * @brief コンストラクタ - INIファイルを読み込む
+     * @param filename パースするINIファイルのパス
+     * @exception std::runtime_error ファイルが開けない場合
+     */
     INIParser(const std::string& filename) {
         load(filename);
     }
 
-    // 値を取得（セクションとキーを指定）
+    /**
+     * @brief 指定されたセクションとキーの値を取得
+     * @param section セクション名
+     * @param key キー名
+     * @return 対応する値、存在しない場合は"UNKNOWN"
+     */
     std::string get(const std::string& section, const std::string& key) const {
         auto secIt = data.find(section);
         if (secIt != data.end()) {
@@ -24,9 +55,13 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> data;
+    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> data; ///< セクション->キー->値のマッピング
 
-    // INIファイルをロードする
+    /**
+     * @brief INIファイルを読み込んでパースする
+     * @param filename ファイルパス
+     * @exception std::cerr ファイルが開けない場合はエラーを標準エラー出力に出力
+     */
     void load(const std::string& filename) {
         std::ifstream file(filename);
         if (!file.is_open()) {
@@ -60,7 +95,11 @@ private:
         }
     }
 
-    // 文字列の余分な空白を除去
+    /**
+     * @brief 文字列の前後の空白を除去
+     * @param str 処理対象の文字列
+     * @return トリミングされた文字列
+     */
     std::string trim(const std::string& str) const {
         const char* whitespace = " \t\n\r\f\v";
         size_t start = str.find_first_not_of(whitespace);
