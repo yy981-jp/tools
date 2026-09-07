@@ -262,4 +262,19 @@ inline size_t size(const std::string& input) {
 	return input_size;
 }
 
+/**
+ * @brief 行両端のスペースなどを取り除く
+ * @param s 1行分の文字列
+ * @return トリム後の文字列
+ */
+inline std::string_view trim(std::string_view s) {
+	auto begin = s.find_first_not_of(" \t\n\r\f\v");
+	auto end = s.find_last_not_of(" \t\n\r\f\v");
+
+	if (begin == std::string_view::npos)
+		return {};
+
+	return s.substr(begin, end - begin + 1);
+}
+
 }
