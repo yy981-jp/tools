@@ -57,7 +57,7 @@ namespace st {
  * @param to   置換後の文字列
  * @note from が空文字列の場合は何もしません
  */
-inline void replace_r(std::string& str, const std::string from, const std::string to) {
+inline void replace(std::string& str, const std::string from, const std::string to) {
 	if (from.empty()) return; // 空文字列を弾く
 	size_t start_pos = 0;
 	while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
@@ -73,8 +73,8 @@ inline void replace_r(std::string& str, const std::string from, const std::strin
  * @param to   置換後の文字列
  * @return 置換後の文字列
  */
-inline std::string replace(std::string str, const std::string from, const std::string to) {
-	replace_r(str,from,to);
+inline std::string replaced(std::string str, const std::string from, const std::string to) {
+	replace(str,from,to);
 	return str;
 }
 
@@ -105,7 +105,7 @@ inline std::vector<std::string> find(const std::string& input, std::string start
  * @param str 変換元の文字列
  * @return 数字部分のみを連結して変換した整数値。数字がない場合は 0
  */
-inline int toi(const std::string& str) {
+inline int toi(const std::string_view& str) {
 	std::string filtered;
 	std::copy_if(str.begin(), str.end(), std::back_inserter(filtered),
 		[](unsigned char c) { return std::isdigit(c); });
@@ -118,9 +118,9 @@ inline int toi(const std::string& str) {
  * @param input 変換元の文字列ベクタ
  * @return 変換後の整数ベクタ
  */
-inline std::vector<int> toi(const std::vector<std::string>& input) {
+inline std::vector<int> toi(const std::vector<std::string_view>& input) {
 	std::vector<int> result;
-	for (std::string e: input) {
+	for (std::string_view e: input) {
 		result.emplace_back(st::toi(e));
 	}
 	return result;
@@ -132,16 +132,35 @@ inline std::vector<int> toi(const std::vector<std::string>& input) {
  * @param delimiter デリミタ文字列
  * @return 分割結果の文字列ベクタ
  */
-inline std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
+inline std::vector<std::string> split(std::string_view str, std::string_view delimiter) {
 	std::vector<std::string> tokens;
 	size_t start = 0, end;
 
-	while ((end = str.find(delimiter, start)) != std::string::npos) {
+	while ((end = str.find(delimiter, start)) != std::string_view::npos) {
 		tokens.emplace_back(str.substr(start, end - start));
 		start = end + delimiter.size();
 	}
 	tokens.emplace_back(str.substr(start));
 	return tokens;
+}
+
+
+/// @brief vector<string_view>をvector<string>に変換
+inline std::vector<std::string> viewToEntity(const std::vector<std::string_view> in) {
+	std::vector<std::string> res;
+	for (const auto& e: in) {
+		res.emplace_back(e);
+	}
+	return res;
+}
+
+/// @brief vector<string>をvector<string_view>に変換
+inline std::vector<std::string_view> entityToView(const std::vector<std::string> in) {
+	std::vector<std::string_view> res;
+	for (const auto& e: in) {
+		res.emplace_back(e);
+	}
+	return res;
 }
 
 /**
@@ -150,12 +169,13 @@ inline std::vector<std::string> split(const std::string& str, const std::string&
  * @param delimiter デリミタ文字列
  * @return 分割・変換後の整数ベクタ
  */
-inline std::vector<int> spliti(const std::string& str, const std::string& delimiter) {
+inline std::vector<int> spliti(const std::string_view& str, const std::string_view& delimiter) {
 	std::vector<std::string> output = split(str,delimiter);
-	std::vector<int> result;
-	for (std::string e: output) {
-		result.emplace_back(st::toi(e));
-	}
+	std::vector<int> result = st::toi(
+		st::entityToView(
+			output
+		)
+	);
 	return result;
 }
 
@@ -170,9 +190,9 @@ typedef std::unordered_map<std::string,std::vector<int>> splitsi;
  * @param targets 検索するデリミタ文字列のベクタ
  * @return デリミタをキー、そのデリミタで終わる部分文字列リストを値とするマップ
  */
-inline splits split(const std::string& input, const std::vector<std::string>& targets) {
+inline splits split(const std::string_view& input, const std::vector<std::string_view>& targets) {
 	splits result;
-	std::string current = input;
+	std::string current = std::string(input);
 	std::string current_segment;
 	std::string current_delimiter;
 
@@ -210,7 +230,7 @@ inline splits split(const std::string& input, const std::vector<std::string>& ta
  * @param targets 検索するデリミタ文字列のベクタ
  * @return デリミタをキー、整数リストを値とするマップ
  */
-inline splitsi spliti(const std::string& input, const std::vector<std::string>& targets) {
+inline splitsi spliti(const std::string_view& input, const std::vector<std::string_view>& targets) {
 	splitsi result;
 	splits output = split(input,targets);
 	for (const auto& [key, segments] : output) {
@@ -242,7 +262,11 @@ inline std::vector<std::string> charV(const int i_argc, const char* const i_argv
  * @return 数字を抽出した整数ベクタ
  */
 inline std::vector<int> charVi(const int i_argc, const char* i_argv[]) {
-	return st::toi(st::charV(i_argc,i_argv));
+	return st::toi(
+		st::entityToView(
+			st::charV(i_argc,i_argv)
+		)
+	);
 }
 
 /**
@@ -251,7 +275,7 @@ inline std::vector<int> charVi(const int i_argc, const char* i_argv[]) {
  * @return 文字列の文字数（バイト数ではなく文字数）
  * @note ASCII (1バイト), 2バイト文字, 3バイト文字（日本語など）, 4バイト文字に対応
  */
-inline size_t size(const std::string& input) {
+inline size_t size(const std::string_view& input) {
 	unsigned char lead;
 	size_t char_size=0, input_size=0, pos;
 	for (pos = 0; pos < input.size(); pos += char_size) {
@@ -267,14 +291,16 @@ inline size_t size(const std::string& input) {
  * @param s 1行分の文字列
  * @return トリム後の文字列
  */
-inline std::string_view trim(std::string_view s) {
+inline std::string trim(std::string_view s) {
 	auto begin = s.find_first_not_of(" \t\n\r\f\v");
 	auto end = s.find_last_not_of(" \t\n\r\f\v");
 
 	if (begin == std::string_view::npos)
 		return {};
 
-	return s.substr(begin, end - begin + 1);
+	return std::string(
+		s.substr(begin, end - begin + 1)
+	);
 }
 
 }
