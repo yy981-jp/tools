@@ -144,6 +144,8 @@ inline std::vector<std::string> split(std::string_view str, std::string_view del
 	return tokens;
 }
 
+
+/// @brief vector<string_view>をvector<string>に変換
 inline std::vector<std::string> viewToEntity(const std::vector<std::string_view> in) {
 	std::vector<std::string> res;
 	for (const auto& e: in) {
@@ -152,6 +154,7 @@ inline std::vector<std::string> viewToEntity(const std::vector<std::string_view>
 	return res;
 }
 
+/// @brief vector<string>をvector<string_view>に変換
 inline std::vector<std::string_view> entityToView(const std::vector<std::string> in) {
 	std::vector<std::string_view> res;
 	for (const auto& e: in) {
