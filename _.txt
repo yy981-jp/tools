@@ -1,0 +1,2 @@
+string.h:
+	混乱のもとになりかねないので、引数にはstring_viewを用い、返り値にはstringを用いる

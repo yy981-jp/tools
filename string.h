@@ -132,8 +132,8 @@ inline std::vector<int> toi(const std::vector<std::string_view>& input) {
  * @param delimiter デリミタ文字列
  * @return 分割結果の文字列ベクタ
  */
-inline std::vector<std::string_view> split(std::string_view str, std::string_view delimiter) {
-	std::vector<std::string_view> tokens;
+inline std::vector<std::string> split(std::string_view str, std::string_view delimiter) {
+	std::vector<std::string> tokens;
 	size_t start = 0, end;
 
 	while ((end = str.find(delimiter, start)) != std::string_view::npos) {
@@ -167,8 +167,12 @@ inline std::vector<std::string_view> entityToView(const std::vector<std::string>
  * @return 分割・変換後の整数ベクタ
  */
 inline std::vector<int> spliti(const std::string_view& str, const std::string_view& delimiter) {
-	std::vector<std::string_view> output = split(str,delimiter);
-	std::vector<int> result = st::toi(output);
+	std::vector<std::string> output = split(str,delimiter);
+	std::vector<int> result = st::toi(
+		st::entityToView(
+			output
+		)
+	);
 	return result;
 }
 
@@ -183,9 +187,9 @@ typedef std::unordered_map<std::string,std::vector<int>> splitsi;
  * @param targets 検索するデリミタ文字列のベクタ
  * @return デリミタをキー、そのデリミタで終わる部分文字列リストを値とするマップ
  */
-inline splits split(const std::string& input, const std::vector<std::string>& targets) {
+inline splits split(const std::string_view& input, const std::vector<std::string_view>& targets) {
 	splits result;
-	std::string current = input;
+	std::string current = std::string(input);
 	std::string current_segment;
 	std::string current_delimiter;
 
@@ -223,7 +227,7 @@ inline splits split(const std::string& input, const std::vector<std::string>& ta
  * @param targets 検索するデリミタ文字列のベクタ
  * @return デリミタをキー、整数リストを値とするマップ
  */
-inline splitsi spliti(const std::string& input, const std::vector<std::string>& targets) {
+inline splitsi spliti(const std::string_view& input, const std::vector<std::string_view>& targets) {
 	splitsi result;
 	splits output = split(input,targets);
 	for (const auto& [key, segments] : output) {
@@ -268,7 +272,7 @@ inline std::vector<int> charVi(const int i_argc, const char* i_argv[]) {
  * @return 文字列の文字数（バイト数ではなく文字数）
  * @note ASCII (1バイト), 2バイト文字, 3バイト文字（日本語など）, 4バイト文字に対応
  */
-inline size_t size(const std::string& input) {
+inline size_t size(const std::string_view& input) {
 	unsigned char lead;
 	size_t char_size=0, input_size=0, pos;
 	for (pos = 0; pos < input.size(); pos += char_size) {
@@ -284,14 +288,16 @@ inline size_t size(const std::string& input) {
  * @param s 1行分の文字列
  * @return トリム後の文字列
  */
-inline std::string_view trim(std::string_view s) {
+inline std::string trim(std::string_view s) {
 	auto begin = s.find_first_not_of(" \t\n\r\f\v");
 	auto end = s.find_last_not_of(" \t\n\r\f\v");
 
 	if (begin == std::string_view::npos)
 		return {};
 
-	return s.substr(begin, end - begin + 1);
+	return std::string(
+		s.substr(begin, end - begin + 1)
+	);
 }
 
 }
