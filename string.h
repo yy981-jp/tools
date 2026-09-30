@@ -190,7 +190,7 @@ typedef std::unordered_map<std::string,std::vector<int>> splitsi;
  * @param targets 検索するデリミタ文字列のベクタ
  * @return デリミタをキー、そのデリミタで終わる部分文字列リストを値とするマップ
  */
-inline splits split(const std::string_view& input, const std::vector<std::string_view>& targets) {
+inline splits splitFromList(const std::string_view& input, const std::vector<std::string_view>& targets) {
 	splits result;
 	std::string current = std::string(input);
 	std::string current_segment;
@@ -230,9 +230,9 @@ inline splits split(const std::string_view& input, const std::vector<std::string
  * @param targets 検索するデリミタ文字列のベクタ
  * @return デリミタをキー、整数リストを値とするマップ
  */
-inline splitsi spliti(const std::string_view& input, const std::vector<std::string_view>& targets) {
+inline splitsi splitiFromList(const std::string_view& input, const std::vector<std::string_view>& targets) {
 	splitsi result;
-	splits output = split(input,targets);
+	splits output = splitFromList(input,targets);
 	for (const auto& [key, segments] : output) {
 		for (const auto& segment : segments) {
 			result[key].push_back(st::toi(segment));

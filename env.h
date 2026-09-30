@@ -26,7 +26,7 @@
 inline std::string getEnv(const std::string& target, const bool slash = true) {
 	std::string result = std::getenv(target.c_str());
 	if (!slash) return result;
-	return st::replace(result,"\\","/");
+	return st::replaced(result,"\\","/");
 }
 
 /* 機能しない
@@ -35,8 +35,8 @@ std::string getEnv(const std::string& target, const std::string& add = "") {
 	if (!result_raw) return std::string();
 	const std::string result{result_raw};
 	bool s(add.contains("/")), bs(add.contains("\\"));
-	if ((!s&&!bs) || (s&&bs) || s) return st::replace(result,"\\","/") + add;
-	else if (bs) return st::replace(result,"/","\\") + add;
+	if ((!s&&!bs) || (s&&bs) || s) return st::replaced(result,"\\","/") + add;
+	else if (bs) return st::replaced(result,"/","\\") + add;
 	else throw std::runtime_error("getEnv(): スラッシュ-バックスラッシュ 判定エラー");
 }
 
