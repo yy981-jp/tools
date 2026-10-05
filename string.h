@@ -179,6 +179,36 @@ inline std::vector<int> spliti(const std::string_view& str, const std::string_vi
 	return result;
 }
 
+/**
+ * @brief 文字列を空白とタブ文字で分割する
+ * @param str       分割する文字列
+ * @return 分割結果の文字列ベクタ
+ */
+inline std::vector<std::string_view> tokenFromSpace(std::string_view str) {
+	std::vector<std::string_view> tokens;
+
+	size_t pos = 0;
+	while(pos < str.size()) {
+		while(pos < str.size() && (str[pos] == ' ' || str[pos] == '\t')) {
+			++pos;
+		}
+
+		if(pos >= str.size()) {
+			break;
+		}
+
+		const size_t begin = pos;
+
+		while(pos < str.size() && str[pos] != ' ' && str[pos] != '\t') {
+			++pos;
+		}
+
+		tokens.emplace_back(str.substr(begin, pos - begin));
+	}
+
+	return tokens;
+}
+
 /// @brief split() の複数デリミタ対応版の戻り値型: デリミタ → 部分文字列リスト
 typedef std::unordered_map<std::string,std::vector<std::string>> splits;
 /// @brief spliti() の複数デリミタ対応版の戻り値型: デリミタ → 整数リスト
