@@ -1,76 +1,161 @@
-#ifdef BUILD
-    #define DLL extern "C" __declspec(dllexport)
-#else
-    // #define DLL __declspec(dllimport)
-	#pragma once
-	#include <windows.h>
-	#include <string>
-	#include <cstdint>
-	#include <stdexcept>
+#pragma once
 
-/**
- * @file dll.h
- * @brief DLL 動的ロードユーティリティ
- *
- * - `BUILD` マクロが定義されている場合: `DLL` は `extern "C" __declspec(dllexport)` に展開されます。
- * - 定義されていない場合: DLL から関数を遅延バインディングで呼び出す `DLL<R, Args...>` テンプレートクラスが提供されます。
- */
+#ifdef BUILD
+	#define DLL __declspec(dllexport)
+#else
+	#include <windows.h>
+
+	#include <stdexcept>
+	#include <string>
+	#include <utility>
+
+	/**
+	 * @file dll.h
+	 * @brief DLL 動的ロードユーティリティ
+	 *
+	 * BUILD が定義されている場合:
+	 *	DLL は __declspec(dllexport) に展開されます。
+	 *
+	 * BUILD が定義されていない場合:
+	 *	DllModule が DLL のロード・解放を管理し、
+	 *	DLL<R, Args...> が関数の遅延解決・呼び出しを行います。
+	 */
+
+	/**
+	 * @class DllModule
+	 * @brief DLL モジュールの所有権を管理するクラス
+	 *
+	 * LoadLibraryW() で DLL をロードし、
+	 * デストラクタで FreeLibrary() を呼び出します。
+	 *
+	 * コピーは禁止し、ムーブのみ許可します。
+	 */
+	class DllModule {
+	public:
+		/**
+		 * @brief DLL をロードする
+		 * @param path DLL ファイルのパス
+		 * @throws std::runtime_error ロードに失敗した場合
+		 */
+		explicit DllModule(const wchar_t* path): handle_(LoadLibraryW(path)) {
+			if (!handle_) {
+				const DWORD error = GetLastError();
+
+				throw std::runtime_error(
+					"LoadLibraryW failed (error " +
+					std::to_string(error) + ")"
+				);
+			}
+		}
+
+		~DllModule() {
+			reset();
+		}
+
+		DllModule(const DllModule&) = delete;
+		DllModule& operator=(const DllModule&) = delete;
+
+		DllModule(DllModule&& other) noexcept:
+			handle_(std::exchange(other.handle_, nullptr)) {}
+
+		DllModule& operator=(DllModule&& other) noexcept {
+			if (this != &other) {
+				reset();
+				handle_ = std::exchange(other.handle_, nullptr);
+			}
+
+			return *this;
+		}
+
+		/**
+		 * @brief DLL モジュールハンドルを取得する
+		 */
+		HMODULE get() const noexcept {
+			return handle_;
+		}
+
+		/**
+		 * @brief DLL を解放する
+		 */
+		void reset() noexcept {
+			if (handle_) {
+				FreeLibrary(handle_);
+				handle_ = nullptr;
+			}
+		}
+
+		explicit operator bool() const noexcept {
+			return handle_ != nullptr;
+		}
+
+	private:
+		HMODULE handle_{};
+	};
 
 	/**
 	 * @class DLL
-	 * @brief DLL から関数を遅延バインディングで呼び出すファンクターテンプレートクラス
-	 * @tparam R    関数の戻り値型
-	 * @tparam Args 関数の引数型（パック）
+	 * @brief DLL の関数を遅延解決して呼び出すファンクター
 	 *
-	 * 初回呼び出し時に GetProcAddress で関数ポインタを解決し、その後はキャッシュした
-	 * ポインタを使って呼び出します。
+	 * 初回呼び出し時に GetProcAddress() で関数を解決し、
+	 * 以降はキャッシュした関数ポインタを使用します。
 	 *
-	 * @code
-	 * HMODULE hMod = LoadLibrary("example.dll");
-	 * DLL<int, const char*> myFunc(hMod, "MyFunction");
-	 * int result = myFunc("hello");
-	 * @endcode
+	 * このクラスは DLL モジュールの所有権を持ちません。
+	 * 使用する DllModule が生存している間に呼び出してください。
+	 *
+	 * @tparam R 戻り値型
+	 * @tparam Args 引数型
 	 */
 	template<typename R, typename... Args>
 	class DLL {
 	public:
 		/**
-		 * @brief コンストラクタ
-		 * @param hModule      関数を検索する DLL モジュールハンドル
-		 * @param functionName 取得する関数名
+		 * @brief 関数ラッパーを作成する
+		 * @param hModule DLL モジュールハンドル
+		 * @param functionName 関数名
 		 */
-		DLL(HMODULE hModule, std::string functionName): func(nullptr), hModule(hModule) {functionName = functionName.c_str();}
+		DLL(HMODULE hModule, std::string functionName):
+			hModule_(hModule),
+			functionName_(std::move(functionName)) {
+			if (!hModule_) {
+				throw std::invalid_argument(
+					"DLL module handle is null"
+				);
+			}
+		}
 
 		/**
-		 * @brief 関数を呼び出す（初回は GetProcAddress で解決）
-		 * @param args 関数に渡す引数
-		 * @return 関数の戻り値
-		 * @throws std::runtime_error 関数が見つからない場合
+		 * @brief 関数を呼び出す
+		 * @throws std::runtime_error 関数の解決に失敗した場合
 		 */
 		R operator()(Args... args) {
-			if (!func) {
-				func = reinterpret_cast<R(*)(Args...)>(GetProcAddress(hModule, functionName));
-				if (!func) {
-					throw std::runtime_error("Failed to load function: " + std::string(functionName));
+			if (!func_) {
+				func_ = reinterpret_cast<Function>(
+					GetProcAddress(
+						hModule_,
+						functionName_.c_str()
+					)
+				);
+
+				if (!func_) {
+					const DWORD error = GetLastError();
+
+					throw std::runtime_error(
+						"GetProcAddress failed for '" +
+						functionName_ +
+						"' (error " +
+						std::to_string(error) + ")"
+					);
 				}
 			}
-			return func(std::forward<Args>(args)...);
+
+			return func_(std::forward<Args>(args)...);
 		}
-		
+
 	private:
-		R(*func)(Args...); ///< 解決済み関数ポインタ
-		HMODULE hModule;   ///< DLL モジュールハンドル
-		const char* functionName; ///< 関数名
+		using Function = R(*)(Args...);
+
+		HMODULE hModule_;
+		std::string functionName_;
+		Function func_ = nullptr;
 	};
-	
-	/**
-	 * @brief DLL モジュールを解放する
-	 * @param dll 解放する HMODULE 変数への参照（解放後 nullptr にセットされる）
-	 */
-	static void cleanDLL(HMODULE& dll) {
-		if (dll) {
-			FreeLibrary(dll);
-			dll = nullptr;
-		}
-	}
 #endif
