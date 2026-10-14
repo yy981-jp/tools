@@ -22,28 +22,28 @@
  * sleepc() や getCTime() などの時間関数に渡す単位を指定します。
  */
 enum class tu {
-	n, ///< ナノ秒
-	c, ///< マイクロ秒
-	l, ///< ミリ秒
+	na, ///< ナノ秒
+	mc, ///< マイクロ秒
+	ml, ///< ミリ秒
 	s, ///< 秒
 	m, ///< 分
 	h, ///< 時間
-	d, ///< 日
-	o, ///< 月
+	day, ///< 日
+	mn, ///< 月
 	y  ///< 年
 };
 
 /**
  * @brief 指定した時間単位でスレッドをスリープさせる
- * @param unit  時間単位 (tu::n / tu::c / tu::l / tu::s / tu::m / tu::h)
+ * @param unit  時間単位
  * @param value スリープする時間の値
  * @throws std::invalid_argument サポートされていない単位 (d / o / y) が渡された場合
  */
 inline void sleepc(tu unit, double value) {
 	switch (unit) {
-		case tu::n: std::this_thread::sleep_for(std::chrono::duration<double, std::nano>(value)); break;
-		case tu::c: std::this_thread::sleep_for(std::chrono::duration<double, std::micro>(value)); break;
-		case tu::l: std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(value)); break;
+		case tu::na: std::this_thread::sleep_for(std::chrono::duration<double, std::nano>(value)); break;
+		case tu::mc: std::this_thread::sleep_for(std::chrono::duration<double, std::micro>(value)); break;
+		case tu::ml: std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(value)); break;
 		case tu::s: std::this_thread::sleep_for(std::chrono::duration<double>(value)); break;
 		case tu::m: std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<60>>(value)); break;
 		case tu::h: std::this_thread::sleep_for(std::chrono::duration<double, std::ratio<3600>>(value)); break;
@@ -84,8 +84,8 @@ inline int getCTime(const tu unit) {
 		case tu::s: return current_tm.tm_sec;
 		case tu::m: return current_tm.tm_min;
 		case tu::h: return current_tm.tm_hour;
-		case tu::d: return current_tm.tm_mday;
-		case tu::o: return current_tm.tm_mon+1;
+		case tu::day: return current_tm.tm_mday;
+		case tu::mn: return current_tm.tm_mon+1;
 		case tu::y: return current_tm.tm_year+1900;
 		default: throw std::invalid_argument("Invalid time unit");
 	}
