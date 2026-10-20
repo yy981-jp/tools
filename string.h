@@ -28,8 +28,8 @@
  * if (is_or(cmd, "quit", "exit", "q")) return;
  * @endcode
  */
-template <typename... Args> inline bool is_or(const std::string& value, Args... args) {
-    std::vector<std::string> values = {args...};
+template <typename... Args> inline bool is_or(const std::string_view& value, Args... args) {
+    std::vector<std::string_view> values = {args...};
     return std::find(values.begin(), values.end(), value) != values.end();
 }
 
