@@ -1,8 +1,8 @@
 #pragma once
 #include <windows.h>
-#include <iostream>
-#include <vector>
-#include <boost/locale.hpp>
+#include <limits>
+#include <stdexcept>
+#include <string>
 
 /**
  * @file proc.h
@@ -12,10 +12,6 @@
  * UNICODE ビルドと ANSI ビルドの両方に対応しています。
  */
 
-/**
- * @namespace proc
- * @brief プロセス操作用名前空間
- */
 namespace proc {
 #ifdef UNICODE
 	/**
@@ -24,7 +20,33 @@ namespace proc {
 	 * @return 変換後の wstring
 	 */
 	inline std::wstring to_wstring(const std::string& u8) {
-		return boost::locale::conv::to_utf<wchar_t>(u8, "UTF-8");
+		if (u8.empty()) return {};
+		if (u8.size() > static_cast<size_t>(std::numeric_limits<int>::max())) {
+			throw std::length_error("yy981/proc.h::to_wstring(): 入力が長すぎます");
+		}
+
+		const int inputSize = static_cast<int>(u8.size());
+		const int outputSize = MultiByteToWideChar(
+			CP_UTF8, MB_ERR_INVALID_CHARS, u8.data(), inputSize, nullptr, 0
+		);
+		if (outputSize == 0) {
+			throw std::runtime_error(
+				"yy981/proc.h::to_wstring(): UTF-8変換失敗 | GetLastError()=" +
+				std::to_string(GetLastError())
+			);
+		}
+
+		std::wstring result(static_cast<size_t>(outputSize), L'\\0');
+		if (MultiByteToWideChar(
+			CP_UTF8, MB_ERR_INVALID_CHARS, u8.data(), inputSize,
+			result.data(), outputSize
+		) != outputSize) {
+			throw std::runtime_error(
+				"yy981/proc.h::to_wstring(): UTF-8変換失敗 | GetLastError()=" +
+				std::to_string(GetLastError())
+			);
+		}
+		return result;
 	}
 
 	/**
@@ -37,32 +59,51 @@ namespace proc {
 	 * @throws std::runtime_error 起動失敗または終了コード取得失敗時
 	 */
 	inline int start(const std::string app, std::string arg = "", const bool wait = false, const std::string& cd = "") {
-		STARTUPINFO si = { sizeof(si) };
-		PROCESS_INFORMATION pi;
+		const std::wstring application = to_wstring(app);
+		std::wstring commandLine = to_wstring(app + " " + arg);
+		const std::wstring workingDirectory = cd.empty() ? std::wstring{} : to_wstring(cd);
 
-		if (CreateProcess(
-			to_wstring(app).c_str(),	// アプリのパス
-			to_wstring(app + " " + arg).data(),   // コマンドライン引数（アプリ名含めない）
-			NULL, NULL,	 // セキュリティ属性
-			false,		  // 子プロセスにハンドルを継承させない
-			0,			  // 作成フラグ（CREATE_NO_WINDOWとかも指定可能）
-			NULL,		   // 環境変数（NULLなら親プロセスと同じ）
-			(cd.empty()? NULL: to_wstring(cd).c_str()),	// カレントディレクトリ（NULLなら親と同じ）
-			&si, &pi
+		STARTUPINFOW si{};
+		si.cb = sizeof(si);
+		PROCESS_INFORMATION pi{};
+
+		if (!CreateProcessW(
+			application.c_str(),
+			commandLine.data(),
+			nullptr,
+			nullptr,
+			FALSE,
+			0,
+			nullptr,
+			workingDirectory.empty() ? nullptr : workingDirectory.c_str(),
+			&si,
+			&pi
 		)) {
-			if (wait) {
-				WaitForSingleObject(pi.hProcess, INFINITE);
-				DWORD exitCode;
-				if (GetExitCodeProcess(pi.hProcess, &exitCode)) {
-					return exitCode;
-				} else throw std::runtime_error("yy981/proc.h::start(): 返り値取得失敗");
-			}
+			throw std::runtime_error(
+				"yy981/proc.h::start(): 起動失敗 | GetLastError()=" +
+				std::to_string(GetLastError())
+			);
+		}
+
+		if (wait) {
+			WaitForSingleObject(pi.hProcess, INFINITE);
+			DWORD exitCode = 0;
+			const BOOL succeeded = GetExitCodeProcess(pi.hProcess, &exitCode);
 			CloseHandle(pi.hProcess);
 			CloseHandle(pi.hThread);
-		} else throw std::runtime_error("yy981/proc.h::start(): 起動失敗 | GetLastError()=" + std::to_string(GetLastError()));
+			if (!succeeded) {
+				throw std::runtime_error(
+					"yy981/proc.h::start(): 返り値取得失敗 | GetLastError()=" +
+					std::to_string(GetLastError())
+				);
+			}
+			return static_cast<int>(exitCode);
+		}
+
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
 		return 0;
 	}
-
 #else
 	/**
 	 * @brief 外部アプリケーションを起動する（ANSI ビルド版）
@@ -74,31 +115,47 @@ namespace proc {
 	 * @throws std::runtime_error 起動失敗または終了コード取得失敗時
 	 */
 	inline int start(const std::string app, std::string arg = "", const bool wait = false, const std::string& cd = "") {
-		STARTUPINFO si = { sizeof(si) };
-		PROCESS_INFORMATION pi;
+		std::string commandLine = app + " " + arg;
+		STARTUPINFOA si{};
+		si.cb = sizeof(si);
+		PROCESS_INFORMATION pi{};
 
-		if (CreateProcess(
-			app.c_str(),	// アプリのパス
-			(app + " " + arg).data(),   // コマンドライン引数（アプリ名含めない）
-			NULL, NULL,	 // セキュリティ属性
-			false,		  // 子プロセスにハンドルを継承させない
-			0,			  // 作成フラグ（CREATE_NO_WINDOWとかも指定可能）
-			NULL,		   // 環境変数（NULLなら親プロセスと同じ）
-			(cd.empty()? NULL: cd.c_str()),	// カレントディレクトリ（NULLなら親と同じ）
-			&si, &pi
+		if (!CreateProcessA(
+			app.c_str(),
+			commandLine.data(),
+			nullptr,
+			nullptr,
+			FALSE,
+			0,
+			nullptr,
+			cd.empty() ? nullptr : cd.c_str(),
+			&si,
+			&pi
 		)) {
-			if (wait) {
-				WaitForSingleObject(pi.hProcess, INFINITE);
-				DWORD exitCode;
-				if (GetExitCodeProcess(pi.hProcess, &exitCode)) {
-					return exitCode;
-				} else throw std::runtime_error("yy981/proc.h::start(): 返り値取得失敗");
-			}
+			throw std::runtime_error(
+				"yy981/proc.h::start(): 起動失敗 | GetLastError()=" +
+				std::to_string(GetLastError())
+			);
+		}
+
+		if (wait) {
+			WaitForSingleObject(pi.hProcess, INFINITE);
+			DWORD exitCode = 0;
+			const BOOL succeeded = GetExitCodeProcess(pi.hProcess, &exitCode);
 			CloseHandle(pi.hProcess);
 			CloseHandle(pi.hThread);
-		} else throw std::runtime_error("yy981/proc.h::start(): 起動失敗 | GetLastError()=" + std::to_string(GetLastError()));
+			if (!succeeded) {
+				throw std::runtime_error(
+					"yy981/proc.h::start(): 返り値取得失敗 | GetLastError()=" +
+					std::to_string(GetLastError())
+				);
+			}
+			return static_cast<int>(exitCode);
+		}
+
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
 		return 0;
 	}
-
 #endif
 }
