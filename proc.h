@@ -1,5 +1,6 @@
 #pragma once
 #include <windows.h>
+#include <cstddef>
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -21,7 +22,7 @@ namespace proc {
 	 */
 	inline std::wstring to_wstring(const std::string& u8) {
 		if (u8.empty()) return {};
-		if (u8.size() > static_cast<size_t>(std::numeric_limits<int>::max())) {
+		if (u8.size() > static_cast<std::size_t>(std::numeric_limits<int>::max())) {
 			throw std::length_error("yy981/proc.h::to_wstring(): 入力が長すぎます");
 		}
 
@@ -36,7 +37,7 @@ namespace proc {
 			);
 		}
 
-		std::wstring result(static_cast<size_t>(outputSize), L'\\0');
+		std::wstring result(static_cast<std::size_t>(outputSize), L'\0');
 		if (MultiByteToWideChar(
 			CP_UTF8, MB_ERR_INVALID_CHARS, u8.data(), inputSize,
 			result.data(), outputSize
@@ -105,15 +106,6 @@ namespace proc {
 		return 0;
 	}
 #else
-	/**
-	 * @brief 外部アプリケーションを起動する（ANSI ビルド版）
-	 * @param app  起動するアプリケーションのパス
-	 * @param arg  コマンドライン引数（デフォルト: 空文字列）
-	 * @param wait プロセスの終了を待つか（デフォルト: false）
-	 * @param cd   起動時のカレントディレクトリ（デフォルト: 空文字列 = 親と同じ）
-	 * @return wait=true の場合は終了コード、wait=false の場合は 0
-	 * @throws std::runtime_error 起動失敗または終了コード取得失敗時
-	 */
 	inline int start(const std::string app, std::string arg = "", const bool wait = false, const std::string& cd = "") {
 		std::string commandLine = app + " " + arg;
 		STARTUPINFOA si{};
