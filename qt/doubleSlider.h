@@ -3,6 +3,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QMouseEvent>
 #include <QtWidgets/QStyle>
+#include <QtWidgets/QStyleOptionSlider>
 
 /**
  * @file qt/doubleSlider.h
@@ -50,9 +51,11 @@ protected:
 	void paintEvent(QPaintEvent *event) override {
 		QSlider::paintEvent(event);
 		QPainter painter(this);
-		QRect groove = style()->subControlRect(QStyle::CC_Slider, &option(), QStyle::SC_SliderGroove, this);
-		QRect handleLower = style()->subControlRect(QStyle::CC_Slider, &option(), QStyle::SC_SliderHandle, this);
-		QRect handleUpper = style()->subControlRect(QStyle::CC_Slider, &option(), QStyle::SC_SliderHandle, this);
+		QStyleOptionSlider sliderOption;
+		initStyleOption(&sliderOption);
+		QRect groove = style()->subControlRect(QStyle::CC_Slider, &sliderOption, QStyle::SC_SliderGroove, this);
+		QRect handleLower = style()->subControlRect(QStyle::CC_Slider, &sliderOption, QStyle::SC_SliderHandle, this);
+		QRect handleUpper = style()->subControlRect(QStyle::CC_Slider, &sliderOption, QStyle::SC_SliderHandle, this);
 
 		handleLower.moveLeft(lowerValueToPos());
 		handleUpper.moveLeft(upperValueToPos());
